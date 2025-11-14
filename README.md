@@ -35,69 +35,37 @@ diligent/
 
 ---
 
+## 🧰 Features of the Streamlit Application
 
-## ⚙️ Setup (Windows / PowerShell)
+🔗 Multi-table Join Builder
 
+Select any 2+ tables
 
-### 1. Create & activate virtual environment
+Arrange join order
 
+Choose columns to include
 
-python -m venv .venv
-.\.venv\Scripts\Activate
+Select join keys and join types
 
+Preview sample data
 
----
+Run join and download result CSV
 
+🧾 SQL Console
 
-### 2. Install required libraries
+Run read-only SQL SELECT queries
 
+View and download results
 
-python -m pip install pandas faker
+📈 Analytics Dashboard
 
+View join operations, query logs, and chart events
 
----
+Daily usage trends
 
+Filter logs by type/date
 
-## 🏗️ Generate Synthetic CSV Data
-
-
-python .\scripts\data_gen.py
-
-
----
-
-
-## 🗄️ Ingest CSVs into SQLite Database
-
-
-python .\scripts\ingest_sqlite.py
-
-
----
-
-
-## 🔍 Preview Database (Join Sample)
-
-
-python .\scripts\query_join.py
-
-
----
-
-
-## 📊 Export Analytical Reports
-
-
-python .\scripts\reports_export.py
-
-
----
-
-
-## 📌 Notes
-
-
-- If your virtual environment breaks or pandas cannot be imported, recreate the venv:
+Download analytics CSV
 
 
 Remove-Item -Recurse -Force .venv
