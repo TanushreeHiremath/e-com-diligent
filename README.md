@@ -1,4 +1,4 @@
-# Diligent — E-commerce Synthetic Data Exercise
+# Diligent — E-commerce Synthetic Data Exercise (live link- https://e-com-diligent-ymmy7oecxs9sjghkh4sgiw.streamlit.app/)
 
 
 This project demonstrates:
