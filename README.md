@@ -1,4 +1,4 @@
-# Diligent — E-commerce Synthetic Data Exercise (live link- https://jobyaari-chatbot-cdsfxsakhc9fygdwdhtu8u.streamlit.app/)
+# Diligent — E-commerce Synthetic Data Exercise (live link- https://e-com-diligent-pmpnjeudecefvgqesgrczb.streamlit.app/)
 
 note- because of some login issues i could not use cursor ide
 
