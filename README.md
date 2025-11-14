@@ -1,5 +1,7 @@
 # Diligent — E-commerce Synthetic Data Exercise (live link- https://jobyaari-chatbot-cdsfxsakhc9fygdwdhtu8u.streamlit.app/)
 
+note- because of some login issues i could not use cursor ide
+
 
 This project demonstrates:
 - Generating synthetic e-commerce data (customers, categories, products, orders, order_items)
