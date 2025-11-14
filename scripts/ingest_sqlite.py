@@ -1,83 +1,98 @@
-import sqlite3
+# scripts/data_gen.py
+from faker import Faker
 import pandas as pd
+import random
 from pathlib import Path
+import datetime
 
-BASE = Path(__file__).resolve().parents[1]
-DATA = BASE / "data"
-DB = DATA / "ecom.db"
+fake = Faker()
+out = Path(__file__).resolve().parents[1] / "data"
+out.mkdir(parents=True, exist_ok=True)
 
-# Read CSVs
-customers = pd.read_csv(DATA / "customers.csv")
-categories = pd.read_csv(DATA / "categories.csv")
-products = pd.read_csv(DATA / "products.csv")
-orders = pd.read_csv(DATA / "orders.csv")
-order_items = pd.read_csv(DATA / "order_items.csv")
+# ----------------- CUSTOMERS -----------------
+customers = []
+for i in range(1, 201):
+    addr = fake.street_address()
+    city = fake.city()
+    state = fake.state()
+    country = fake.country()
+    zipcode = fake.postcode()
+    phone = fake.msisdn()[-10:]  # make a 10-digit-ish phone
+    customers.append({
+        "customer_id": i,
+        "name": fake.name(),
+        "email": fake.unique.email(),
+        "phone": phone,
+        "address": addr,
+        "city": city,
+        "state": state,
+        "country": country,
+        "zipcode": zipcode,
+        "created_at": fake.date_between(start_date='-3y', end_date='today').isoformat()
+    })
+pd.DataFrame(customers).to_csv(out / "customers.csv", index=False)
 
-conn = sqlite3.connect(DB)
-cur = conn.cursor()
+# ----------------- CATEGORIES -----------------
+categories = []
+for i in range(1, 21):
+    categories.append({
+        "category_id": i,
+        "name": fake.word().capitalize()
+    })
+pd.DataFrame(categories).to_csv(out / "categories.csv", index=False)
 
-cur.executescript("""
-PRAGMA foreign_keys = ON;
+# ----------------- PRODUCTS -----------------
+products = []
+for i in range(1, 301):
+    cat = random.choice(categories)["category_id"]
+    sku = f"SKU-{i:05d}"
+    products.append({
+        "product_id": i,
+        "name": fake.word().capitalize() + " " + fake.word().capitalize(),
+        "category_id": cat,
+        "sku": sku,
+        "price": round(random.uniform(5.0, 500.0), 2),
+        "description": fake.sentence(nb_words=6)
+    })
+pd.DataFrame(products).to_csv(out / "products.csv", index=False)
 
-DROP TABLE IF EXISTS customers;
-DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS products;
-DROP TABLE IF EXISTS orders;
-DROP TABLE IF EXISTS order_items;
+# ----------------- ORDERS -----------------
+orders = []
+order_items = []
+order_item_id = 1
+for order_id in range(1, 1001):
+    cust = random.choice(customers)["customer_id"]
+    order_date = fake.date_between(start_date='-2y', end_date='today')
+    status = random.choice(["pending", "shipped", "delivered", "cancelled"])
+    ship_addr = fake.street_address()
+    ship_city = fake.city()
+    total = 0
+    num_items = random.randint(1, 5)
+    items = random.sample(products, num_items)
+    for prod in items:
+        qty = random.randint(1, 4)
+        unit_price = prod["price"]
+        total += qty * unit_price
+        order_items.append({
+            "order_item_id": order_item_id,
+            "order_id": order_id,
+            "product_id": prod["product_id"],
+            "quantity": qty,
+            "unit_price": unit_price
+        })
+        order_item_id += 1
 
-CREATE TABLE customers (
-  customer_id INTEGER PRIMARY KEY,
-  name TEXT,
-  email TEXT,
-  created_at TEXT
-);
+    orders.append({
+        "order_id": order_id,
+        "customer_id": cust,
+        "order_date": order_date.isoformat(),
+        "total_amount": round(total, 2),
+        "status": status,
+        "shipping_address": ship_addr,
+        "shipping_city": ship_city
+    })
 
-CREATE TABLE categories (
-  category_id INTEGER PRIMARY KEY,
-  name TEXT
-);
+pd.DataFrame(orders).to_csv(out / "orders.csv", index=False)
+pd.DataFrame(order_items).to_csv(out / "order_items.csv", index=False)
 
-CREATE TABLE products (
-  product_id INTEGER PRIMARY KEY,
-  name TEXT,
-  category_id INTEGER,
-  price REAL,
-  FOREIGN KEY(category_id) REFERENCES categories(category_id)
-);
-
-CREATE TABLE orders (
-  order_id INTEGER PRIMARY KEY,
-  customer_id INTEGER,
-  order_date TEXT,
-  total_amount REAL,
-  FOREIGN KEY(customer_id) REFERENCES customers(customer_id)
-);
-
-CREATE TABLE order_items (
-  order_item_id INTEGER PRIMARY KEY,
-  order_id INTEGER,
-  product_id INTEGER,
-  quantity INTEGER,
-  unit_price REAL,
-  FOREIGN KEY(order_id) REFERENCES orders(order_id),
-  FOREIGN KEY(product_id) REFERENCES products(product_id)
-);
-""")
-
-customers.to_sql("customers", conn, if_exists="append", index=False)
-categories.to_sql("categories", conn, if_exists="append", index=False)
-products.to_sql("products", conn, if_exists="append", index=False)
-orders.to_sql("orders", conn, if_exists="append", index=False)
-order_items.to_sql("order_items", conn, if_exists="append", index=False)
-
-conn.commit()
-
-for t in ["customers","categories","products","orders","order_items"]:
-    c = pd.read_sql_query(f"SELECT count(*) AS cnt FROM {t}", conn)
-    print(f"{t}: {int(c['cnt'][0])} rows")
-    print(pd.read_sql_query(f"SELECT * FROM {t} LIMIT 5", conn))
-    print("-"*40)
-
-conn.close()
-
-print("SQLite DB created at diligent/data/ecom.db")
+print("Generated CSVs in", out)
